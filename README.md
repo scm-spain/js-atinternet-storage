@@ -36,15 +36,16 @@ Instead of using ```xt_med``` or ```xt_click``` to track click events, you can u
 
 Instead of :
 
-```xt_med('A', 1, 'foo')```
+```javascript
+xt_med('A', '1', 'foo');```
 
 You would do :
 
 ```javascript
 ATI.push({
-  page: 'foo', // name or chapter
-  level: 1,    // level
-  type: 'A'    // type (as defined in their documentation)
+  page : 'foo', // name or chapter
+  level: '1',  // level
+  type : 'A'    // type (as defined in their documentation)
 });
 ```
 

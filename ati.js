@@ -119,9 +119,9 @@ ATI = {
    * @param {{page: String, type: String, level: String=}} event
    * @example
    *   ATI.push({
-   *     page: 'box::login::login',
-   *     level: l2Map['entry'],
-   *     type: 'A'
+   *     page  : 'foo::bar',
+   *     level : '1',
+   *     type  : 'A'
    *   });
    */
   push: function(event) {
