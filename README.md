@@ -4,24 +4,24 @@ If you're using http://www.atinternet-solutions.com for your analytic needs this
 
 AT Internet includes different methods to track click events, here are the two you'll most likely use:
 
-  * ```xt_click```
-  * ```xt_med```
+  * ```xt_click()```
+  * ```xt_med()```
   
-### xt_click
+### xt_click()
 
-The issue with ```xt_click``` is that you have to return this function in your event listener.
+The issue with ```xt_click()``` is that you have to return this function in your event listener.
 
 This is inconvenient if you're having existing listeners that already return values.
 
-It is also a source of other issues, ```xt_click``` will hijack your link by :
+It is also a source of other issues, ```xt_click()``` will hijack your link by :
 
   * preventing the default action;
   * using window.location to redirect you (might not work in situations like using pushState);
   * …
 
-### xt_med
+### xt_med()
 
-```xt_med``` on the other hand is pretty minimal and just fires a request to their servers.
+```xt_med()``` on the other hand is pretty minimal and just fires a request to their servers.
 The issue here is that this won't work either, since the browser will load the next page and cancel the ongoing request.
 
 ## What does the ATI Wrapper do?
@@ -32,7 +32,7 @@ If the page got reloaded and the request cancelled, it will still live in the st
 
 ## Example
 
-Instead of using ```xt_med``` or ```xt_click``` to track click events, you can use ```ATI.push()```.
+Instead of using ```xt_med()``` or ```xt_click()``` to track click events, you can use ```ATI.push()```.
 
 Instead of :
 
