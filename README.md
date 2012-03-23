@@ -37,7 +37,8 @@ Instead of using ```xt_med``` or ```xt_click``` to track click events, you can u
 Instead of :
 
 ```javascript
-xt_med('A', '1', 'foo');```
+xt_med('A', '1', 'foo');
+```
 
 You would do :
 
