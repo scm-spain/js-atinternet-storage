@@ -34,13 +34,13 @@ If the page got reloaded and the request cancelled, it will still live in the st
 
 Instead of using ```xt_med()``` or ```xt_click()``` to track click events, you can use ```ATI.push()```.
 
-Instead of :
+Instead of:
 
 ```javascript
 xt_med('A', '1', 'foo');
 ```
 
-You would do :
+You would do:
 
 ```javascript
 ATI.push({

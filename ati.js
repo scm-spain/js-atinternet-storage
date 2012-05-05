@@ -68,8 +68,8 @@ ATI = {
     }
     var hasLocalStorage = true;
     try {
-      this.setStorage('1');
-      window.localStorage.removeItem(this.name);
+      window.localStorage.setItem('sc-test-storage','1');
+      window.localStorage.removeItem('sc-test-storage');
     } catch (error) {
       hasLocalStorage = false;
     }
