@@ -28,7 +28,7 @@
     supportsLocalStorage, supportsJSON,
 
     /* formatting helpers */
-    getDomain, getFormatedTime, getFormatedScreenProperties, getScreenSize, getCombinedURL,
+    getDomain, getFormattedTime, getFormattedScreenProperties, getScreenSize, getCombinedURL,
 
     /* storage helpers */
     getStorage, setStorage, processStorage, resetStorage, sendData,
@@ -37,7 +37,13 @@
      * The name of the localStorage key we use
      * @type {String}
      */
-    STORAGE_KEY = 'sc-ati-events-test';
+    STORAGE_KEY = 'sc-ati-events-test',
+
+    /**
+     * Increases with each push and acts as a UUID
+     * @type {Number}
+     */
+    counter = 0;
 
   ATI = {
 
@@ -55,11 +61,11 @@
      * @final
      */
     init: function(params) {
-      var error;
+      var error, storage;
 
       if (initialized) {
         error = 'Already initialized';
-      } else if (!params || (params && (!params.id || !params.subdomain))) {
+      } else if (!params || !params.id || !params.subdomain) {
         error = 'Site id and subdomain are missing as parameters';
       }
 
@@ -68,13 +74,16 @@
       }
 
       if (supportsLocalStorage() && supportsJSON()) {
-        siteId = params.id;
+        siteId    = params.id;
         subdomain = params.subdomain;
-        if (getStorage() && getStorage().length) {
+        storage   = getStorage();
+
+        if (storage && storage.length) {
           processStorage();
         } else {
           emptyStorage();
         }
+
         initialized = true;
       }
     },
@@ -97,10 +106,10 @@
      * @final
      */
     push: function(event) {
-      var storage, events, uuid, newEvent, error;
+      var events, uuid, newEvent, error;
 
       if (!initialized) {
-        error = 'you need to initialize the library first';
+        error = 'the library needs to be initialized first';
       } else if (typeof event !== 'object') {
         error = 'only objects are accepted';
       } else if (!event.page) {
@@ -116,9 +125,8 @@
       /* if no level is passed it defaults to an empty string */
       event.level = event.level || '';
 
-      storage = getStorage(),
-      events  = storage ? storage : [],
-      uuid    = new Date().getTime();
+      events = getStorage() || [],
+      uuid = ++counter;
 
       if (!isArray(events)) {
         events = [ events ];
@@ -134,7 +142,7 @@
   };
 
   /**
-   * Checks if the passed object isn't empty
+   * Checks if the passed object is empty
    * @param {Object} obj
    * @return {Boolean}
    */
@@ -174,7 +182,7 @@
    * @return {Boolean}
    */
   supportsJSON = function() {
-    return typeof window.JSON !== 'undefined';
+    return window.JSON !== undefined;
   };
 
   /**
@@ -186,27 +194,27 @@
   };
 
   /**
-   * Returns a specifically formated string for ATI of the local time.
+   * Returns a specifically formatted string for ATI of the local time.
    * @return {String}
    */
-  getFormatedTime = function() {
+  getFormattedTime = function() {
     var date = new Date();
     return [date.getHours(), date.getMinutes(), date.getSeconds()].join('x');
   };
 
   /**
-   * Returns a specifically formated string for ATI of some screen properties
+   * Returns a specifically formatted string for ATI of some screen properties
    * @return {String}
    */
-  getFormatedScreenProperties = function() {
+  getFormattedScreenProperties = function() {
     return [window.screen.availWidth, window.screen.availHeight, window.screen.pixelDepth, window.screen.colorDepth].join('x');
   };
 
   /**
-   * Returns a specifically formated string for ATI of screen resolution
+   * Returns a specifically formatted string for ATI of screen resolution
    * @return {String}
    */
-  getFormatedScreenSize = function() {
+  getFormattedScreenSize = function() {
     return [window.screen.width, window.screen.height].join('x');
   };
 
@@ -223,9 +231,9 @@
       's='   + siteId,
       's2='  + event.level,
       'p='   + event.page,
-      'r='   + getFormatedScreenProperties(),
-      're='  + getFormatedScreenSize(),
-      'hl='  + getFormatedTime(),
+      'r='   + getFormattedScreenProperties(),
+      're='  + getFormattedScreenSize(),
+      'hl='  + getFormattedTime(),
       'jv='  + (navigator.javaEnabled() ? 1 : 0),
       'lng=' + navigator.language
     ].join('&');
@@ -262,28 +270,26 @@
   /**
    * Stores data in the storage
    * When nothing is passed it resets the storage, call emptyStorage() to do so explicitly.
-   * @param {String=} data String to store in localStorage
+   * @param {Array=} data Array to store in localStorage
    */
   setStorage = function(data) {
     if (data) {
-      var i = 0;
-      for (var item in data) {
-        if (isObjectEmpty(item)) {
+      for (var i = 0, l = data.length; i < l; ++i) {
+        if (isObjectEmpty(data[i])) {
           if (data.length > 1) {
             data = data.splice(i, 1);
           } else {
-            data = data.splice(0, 0);
+            data.length = 0;
           }
         }
-        i++;
       }
     }
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data || []));
   };
 
   /**
-   * Returns a stringified object of the storage
-   * @return {String}
+   * Returns a parsed object of the storage
+   * @return {Array}
    */
   getStorage = function() {
     return JSON.parse(window.localStorage.getItem(STORAGE_KEY));
@@ -294,9 +300,9 @@
    */
   processStorage = function() {
     var events = getStorage();
-    for (var event in events) {
+    for (var i = 0, l = events.length; i < l; ++i) {
       var uuid;
-      for (var key in events[event]) {
+      for (var key in events[i]) {
         uuid = key;
       }
       sendData(events[0][uuid], uuid);
@@ -324,10 +330,10 @@
     var img = new Image();
     img.onload = function() {
       var storage = getStorage();
-      for (var key in storage) {
-        var item = storage[key];
+      for (var i = 0, l = storage.length; i < l; ++i) {
+        var item = storage[i];
         for (var id in item) {
-          if (this.getAttribute('data-ati-uuid') === id) {
+          if (this['data-ati-uuid'] === id) {
             delete item[id];
             if (isObjectEmpty(storage[0])) {
               emptyStorage();
@@ -339,7 +345,7 @@
         }
       }
     };
-    img.setAttribute('data-ati-uuid', uuid);
+    img['data-ati-uuid'] = uuid;
     img.src = getCombinedURL(event);
   };
 
