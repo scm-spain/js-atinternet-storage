@@ -1,66 +1,87 @@
 If you're using http://www.atinternet-solutions.com for your analytic needs this might be of interest to you.
 
-## What's the issue?
+## Whaaa?
 
-AT Internet includes different methods to track click events, here are the two you'll most likely use:
+This library is an alternative to xtcore.js.
 
-  * ```xt_click()```
-  * ```xt_med()```
-  
-### xt_click()
+It allows you to perform very basic tracking tasks more easily.
 
-The issue with ```xt_click()``` is that you have to return this function in your event listener.
+## Why?
 
-This is inconvenient if you're having existing listeners that already return values.
+### Clearer public interface
 
-It is also a source of other issues, ```xt_click()``` will hijack your link by :
+Its interface is simpler and clearer, we only implemented what we need: tracking clicks, custom events, audio events, and setting custom site variables.
 
-  * preventing the default action;
-  * using window.location to redirect you (might not work in situations like using pushState);
-  * …
+### More friendly
 
-### xt_med()
+You can run it in traditional websites or modern single page applications.
 
-```xt_med()``` on the other hand is pretty minimal and just fires a request to their servers.
-The issue here is that this won't work either, since the browser will load the next page and cancel the ongoing request.
+Once loaded, ```ATI``` exports itself as a module in AMD contextes, or attaches itself as an object to the ```window``` object, it's that simple.
 
-## What does the ATI Wrapper do?
+### More performant
 
-It uses a mechanism that stores the click events and processes them right away.
+```ATI``` integrates a mechanism to store events and process them right away.
 
-If the page got reloaded and the request cancelled, it will still live in the storage and be processed on next page load.
+If the request gets cancelled, ATI will process it on next page load or the next request, this way you never loose any data.
 
-## Example
+## Public Interface
 
-Instead of using ```xt_med()``` or ```xt_click()``` to track click events, you can use ```ATI.push()```.
+To make sure you can rely on some documentation, we decided to not alter the way data is being presented.
 
-Instead of:
+### Initialize
+
+This is the only mandatory step.
 
 ```javascript
-xt_med('A', '1', 'foo');
-```
-
-You would do:
-
-```javascript
-ATI.push({
-  page : 'foo', // name or chapter
-  level: '1',  // level
-  type : 'A'    // type (as defined in their documentation)
+ATI.initialize({
+  id: '123456',
+  subdomain: 'https://logs1234'
 });
 ```
 
-## Depedencies
+You will find these details in your admin page or the xtcore.js tracking code, your site id is ```window.xtsite``` and the subdomain ```window.xtsd```
 
-  * jQuery — You can easily replace it with DOM methods or any other library
+### Page views
 
-You don't need xtcore.js only the main tag provided by AT Internet is necessary.
+```javascript
+ATI.triggerPageView({
+  page  : 'foo', // The page 'http://soundcloud.com/bar' or as a chapter 'foo::http://soundcloud.com/bar'
+  level : '1' // Second Level ID, see ATI documentation for more details
+});
+```
 
-If you use other methods of AT Internet, you might want to leave xtcore.js in your project though, or just extend the wrapper to handle other types of events, page views, etc…
+### Click events (custom events)
+
+```javascript
+ATI.triggerCustomEvent({
+  type  : 'A', // 'A' === click… lookup ATI's documentation for other event types
+  page  : 'foo', // The page 'http://soundcloud.com/bar' or as a chapter 'foo::http://soundcloud.com/bar'
+  level : '1' // Second Level ID, see ATI documentation for more details
+});
+```
+
+### Audio events
+
+```javascript
+ATI.triggerAudioEvent({
+  page         : 'foo', // The playing sound's page
+  level        : '1', // The playing sound's page level
+  action       : 'play', // can also be pause or stop
+  duration     : '123456', // in seconds
+  contextPage  : 'bar', // Page where the play happened
+  contextLevel : '2' // Second Level ID where the play happened
+});
+```
+
+Audio events handle refresh events internally.
+
+## Dependencies
+
+None! — That's right.
 
 ## Compatibility
 
-This code uses localStorage and JSON, if you need to support browsers that don't include these (like IE6, IE7, iOS,…) you might want to use some polyfills for them.
+This code uses localStorage and JSON, if you need to support browsers that do not implement these technologies (like IE6, IE7, iOS,…) you might want to use some polyfills for them.
 
   * [JSON polyfill](https://github.com/douglascrockford/JSON-js)
   * [localStorage polyfill](https://developer.mozilla.org/en/DOM/Storage#Compatibility)

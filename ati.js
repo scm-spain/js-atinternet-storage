@@ -52,7 +52,7 @@
      * @param {String} params.id        The ATI site ID
      * @param {String} params.subdomain The ATI subdomain, prefer the SSL variation.
      * @example
-     *   ATI.init({
+     *   ATI.initialize({
      *     id: '123456',
      *     subdomain: 'https://logs1234'
      *   });
