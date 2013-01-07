@@ -22,7 +22,7 @@
   var ATI,
 
     /* local vars */
-    initialized, siteId, subdomain, customVariables, _customVariables,
+    initialized, siteId, subdomain, customVariables, _customVariables, audioRefreshTimer,
 
     /* utilities helpers */
     isObjectEmpty, isArray,
@@ -33,7 +33,7 @@
     getDomain, getFormattedTime, getFormattedScreenProperties, getFormattedScreenSize, getCombinedURL,
 
     /* data helpers */
-    processEvent, pushEvent, sendData,
+    processEvent, pushEvent, sendData, isEventAudio, handleAudioRefreshEvents,
 
     /* storage helpers */
     getStorage, setStorage, processStorage, emptyStorage,
@@ -42,12 +42,12 @@
      * The name of the localStorage key we use
      * @type {String}
      */
-    STORAGE_KEY = 'sc-ati-events-test';
+    STORAGE_KEY = 'sc-new-ati-events';
 
   ATI = {
 
     /**
-     * Initializes the wrapper
+     * Initializes the library
      * @param {Object} params           Contains the mandatory initialization params
      * @param {String} params.id        The ATI site ID
      * @param {String} params.subdomain The ATI subdomain, prefer the SSL variation.
@@ -83,7 +83,7 @@
      * @param {Object}  params
      * @param {String}  params.page         The playing sound's page (yours or a users)
      * @param {String}  params.level        The playing sound's page level (yours or a users)
-     * @param {String}  params.action       'play'|'pause'|'refresh'
+     * @param {String}  params.action       'play'|'pause'|'stop' (refresh events are handled internally)
      * @param {String}  params.duration     in seconds
      * @param {String}  params.contextPage  Page where the play happened (e.g. stream)
      * @param {String}  params.contextLevel Second Level ID where the play happened (e.g. stream)
@@ -203,38 +203,49 @@
    */
   generateUUID = function() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+      var r = Math.floor(Math.random() * 16), v = c === 'x' ? r : (r&3|8);
       return v.toString(16);
     });
   };
 
   /**
-   * Returns an error if one condition does not pass otherwise returns true
+   * Throws an error if one condition does not pass otherwise returns true
    * @param  {String} type
    * @param  {Object} params Contains params to check against
    * @return {Boolean?}
    */
   passesConditions = function(type, params) {
-    var error, rules, paramsErrorStr;
+    var error, rules, paramsErrorStr, hasParams;
     paramsErrorStr = 'One or multiple params are missing';
+
+    hasParams = function(list) {
+      var noMissingParam = true,
+          i, l, param;
+      for (i = 0, l = list.length; i < l; i++) {
+        if (!params[list[i]]) {
+          noMissingParam = false;
+          break;
+        }
+      }
+      return params && noMissingParam;
+    };
 
     if (type === 'initialize') {
       if (initialized) {
         error = 'Already initialized';
-      } else if (!params || !params.id || !params.subdomain) {
+      } else if (!hasParams(['id', 'subdomain'])) {
         error = paramsErrorStr;
       }
     } else if (type === 'audio') {
-      if (!params || !params.page || !params.level || !params.action ||
-          !params.duration || !params.contextPage || !params.contextLevel) {
+      if (!hasParams(['page', 'level', 'action', 'duration', 'contextPage', 'contextLevel'])) {
         error = paramsErrorStr;
       }
     } else if (type === 'custom') {
-      if (!params || !params.page || !params.level || !params.type) {
+      if (!hasParams(['page', 'level', 'type'])) {
         error = paramsErrorStr;
       }
     } else if (type === 'pageview') {
-      if (!params || !params.page || !params.level) {
+      if (!hasParams(['page', 'level'])) {
         error = paramsErrorStr;
       }
     } else if (!initialized) {
@@ -318,18 +329,25 @@
     if (event.type) {
       /* Custom events, like clicks. */
       url += '&clic=' + event.type;
-    } else if (event.action && event.duration) {
+    } else if (isEventAudio(event)) {
       /* Audio events */
       url += [
         '&type=audio',
-        'a='      + event.action,
-        'm1='     + event.duration,
-        'm5=int',   /* We don't need to change that, all of our plays are internal */
-        'm6=clip',  /* We don't need to change that, we always know the duration of the sound */
-        'prich='  + event.contextPage,
-        's2rich=' + event.contextLevel,
-        'm3='     + event.qualityID
+        'm5=int',  /* We don't need to change that, all of our plays are internal */
+        'm6=clip'  /* We don't need to change that, we always know the duration of the sound */
       ].join('&');
+      if (event.action !== 'refresh') {
+        url += [
+          '&a='     + event.action,
+          'm1='     + event.duration,
+          'prich='  + event.contextPage,
+          's2rich=' + event.contextLevel,
+          'm3='     + event.qualityID
+        ].join('&');
+      } else {
+        /* Audio refresh events */
+        url += '&a=refresh';
+      }
     } else {
       /* else it counts as a pageview */
       url += '&ref=' + document.referrer;
@@ -435,6 +453,10 @@
       return;
     }
 
+    if (isEventAudio(event) && event.action !== 'refresh') {
+      handleAudioRefreshEvents(event);
+    }
+
     var img = new Image();
     img.onload = function() {
       var storage = getStorage(),
@@ -457,6 +479,41 @@
     img['data-ati-uuid'] = uuid;
     img.src = getCombinedURL(event);
   };
+
+  /**
+   * Verifies if the passed event is audio
+   * @param  {Object}  event
+   * @return {Boolean}
+   */
+  isEventAudio = function(event) {
+    return event.action && event.duration;
+  };
+
+  /**
+   * Creates audio refresh events based on the sound duration to define an appropriate number of intervals
+   * @param  {Object} event
+   */
+  handleAudioRefreshEvents = function(event) {
+    var MIN_STEPS = 1,
+        MAX_STEPS = 10,
+        refreshSteps,
+        refreshInterval;
+
+    if (event.action === 'play') {
+      refreshSteps    = Math.min( Math.max( Math.floor( 3/2 * Math.log(event.duration) - 1.5 ), MIN_STEPS ), MAX_STEPS );
+      refreshInterval = Math.floor(event.duration / refreshSteps) * 1000;
+
+      audioRefreshTimer = window.setInterval(function() {
+        event.action = 'refresh';
+        processEvent('audio', event);
+      }, refreshInterval);
+
+    } else {
+      window.clearInterval(audioRefreshTimer);
+    }
+  };
+
+
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = ATI;
