@@ -61,10 +61,11 @@
      * @final
      */
     initialize: function(params) {
-      var passes = false;
+      var passes = false,
+          storage;
       if (passesConditions('initialize', params)) {
         if (supportsLocalStorage() && supportsJSON()) {
-          var storage = getStorage();
+          storage = getStorage();
           siteId          = params.id;
           subdomain       = params.subdomain;
           customVariables = {};
