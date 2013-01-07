@@ -57,9 +57,11 @@
      *     subdomain: 'https://logs1234'
      *   });
      * See ATI Documentation for more details about your Site ID and your subdomain.
+     * @return {Boolean}
      * @final
      */
     initialize: function(params) {
+      var passes = false;
       if (passesConditions('initialize', params)) {
         if (supportsLocalStorage() && supportsJSON()) {
           var storage = getStorage();
@@ -74,8 +76,10 @@
           }
 
           initialized = true;
+          passes = true;
         }
       }
+      return passes;
     },
 
     /**
@@ -97,10 +101,11 @@
      *     contextPage  : 'sound::http://soundcloud.com/stream',
      *     contextLevel : '1'
      *   });
+     * @return {Boolean}
      * @final
      */
     triggerAudioEvent: function(params) {
-      processEvent('audio', params);
+      return processEvent('audio', params);
     },
 
     /**
@@ -115,10 +120,11 @@
      *     page  : 'dashbox::click::repost::http://soundcloud.com/stream',
      *     level : '1'
      *   });
+     * @return {Boolean}
      * @final
      */
     triggerCustomEvent: function(params) {
-      processEvent('custom', params);
+      return processEvent('custom', params);
     },
 
     /**
@@ -131,10 +137,11 @@
      *     page  : 'http://soundcloud.com/stream',
      *     level : '1'
      *   });
+     * @return {Boolean}
      * @final
      */
     triggerPageView: function(params) {
-      processEvent('pageview', params);
+      return processEvent('pageview', params);
     },
 
     /**
@@ -417,9 +424,12 @@
    * @param  {Object} params Contains params to check against
    */
   processEvent = function(type, params) {
+    var passes = false;
     if (passesConditions(type, params)) {
       pushEvent(params);
+      passes = true;
     }
+    return passes;
   };
 
   /**

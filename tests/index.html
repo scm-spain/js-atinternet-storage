@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ATI Unit Tests</title>
+  <link rel="stylesheet" href="vendor/tyrtle/tyrtle.css">
+</head>
+<body>
+  <!-- Dependecies -->
+  <script>window.SC = {};</script>
+  <script src="./vendor/jquery-1.8.3.min.js"></script>
+  <script src="./vendor/tyrtle/Tyrtle.js"></script>
+  <script src="./vendor/tyrtle/renderers/html.js"></script>
+  <script src="helpers.js"></script>
+
+  <!-- Init -->
+  <script>
+    window.SC.ATItests  = new Tyrtle();
+    window.SC.privateFn = {};
+
+    $.ajax({
+      // Lets load the file we want to test
+      url:'../ati.js',
+      dataFilter: function(data) {
+      // This is a little hacky.
+      // As we want to test private functions we filter the data and expose the private functions in window.SC.privateFn
+        return data.replace(/([a-zA-Z]+) = function/g, 'window.SC.privateFn.$1 = $1 = function');
+      },
+      success: function() {
+        // Once we retrieved ati.js we load the tests.
+        $.getScript('tests.js', function(){
+          // And run em.
+          window.SC.ATItests.run();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
