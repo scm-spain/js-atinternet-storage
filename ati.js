@@ -227,15 +227,15 @@
     paramsErrorStr = 'One or multiple params are missing';
 
     hasParams = function(list) {
-      var noMissingParam = true,
+      var missingParam = false,
           i, l, param;
       for (i = 0, l = list.length; i < l; i++) {
         if (!params[list[i]]) {
-          noMissingParam = false;
+          missingParam = true;
           break;
         }
       }
-      return params && noMissingParam;
+      return params && !missingParam;
     };
 
     if (type === 'initialize') {
@@ -244,18 +244,12 @@
       } else if (!hasParams(['id', 'subdomain'])) {
         error = paramsErrorStr;
       }
-    } else if (type === 'audio') {
-      if (!hasParams(['page', 'level', 'action', 'duration', 'contextPage', 'contextLevel'])) {
+    } else if (type === 'audio' && !hasParams(['page', 'level', 'action', 'duration', 'contextPage', 'contextLevel'])) {
         error = paramsErrorStr;
-      }
-    } else if (type === 'custom') {
-      if (!hasParams(['page', 'level', 'type'])) {
+    } else if (type === 'custom' && !hasParams(['page', 'level', 'type'])) {
         error = paramsErrorStr;
-      }
-    } else if (type === 'pageview') {
-      if (!hasParams(['page', 'level'])) {
+    } else if (type === 'pageview' && !hasParams(['page', 'level'])) {
         error = paramsErrorStr;
-      }
     } else if (!initialized) {
       error = 'the library needs to be initialized first';
     }
