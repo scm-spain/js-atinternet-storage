@@ -65,7 +65,7 @@
           storage;
       if (passesConditions('initialize', params)) {
         if (supportsLocalStorage() && supportsJSON()) {
-          storage = getStorage();
+          storage         = getStorage();
           siteId          = params.id;
           subdomain       = params.subdomain;
           customVariables = {};
@@ -299,18 +299,20 @@
 
   /**
    * Returns a specifically formatted string for ATI of some screen properties
-   * @return {String}
+   * @return {String} e.g. 1280x774x24x24
    */
   getFormattedScreenProperties = function() {
-    return [window.screen.availWidth, window.screen.availHeight, window.screen.pixelDepth, window.screen.colorDepth].join('x');
+    var windowScreen = window.screen;
+    return [windowScreen.availWidth, windowScreen.availHeight, windowScreen.pixelDepth, windowScreen.colorDepth].join('x');
   };
 
   /**
    * Returns a specifically formatted string for ATI of screen resolution
-   * @return {String}
+   * @return {String} e.g. 1280x800
    */
   getFormattedScreenSize = function() {
-    return [window.screen.width, window.screen.height].join('x');
+    var windowScreen = window.screen;
+    return [windowScreen.width, windowScreen.height].join('x');
   };
 
   /**
