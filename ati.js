@@ -230,7 +230,7 @@
       var missingParam = false,
           i, l, param;
       for (i = 0, l = list.length; i < l; i++) {
-        if (!params[list[i]]) {
+        if (params[list[i]] === undefined) {
           missingParam = true;
           break;
         }
