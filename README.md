@@ -75,6 +75,16 @@ ATI.triggerAudioEvent({
 
 Audio events handle refresh events internally.
 
+### Custom variables
+
+```javascript
+ATI.setCustomVariables({
+  xt_ac: 4
+});
+```
+
+Lets you set custom variables (defined by AT Internet) dynamically.
+
 ## Dependencies
 
 None! — That's right.
