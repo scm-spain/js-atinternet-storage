@@ -1,0 +1,3 @@
+[submodule "tests/vendor/tyrtle"]
+	path = tests/vendor/tyrtle
+	url = git@github.com:soundcloud/tyrtle.git
