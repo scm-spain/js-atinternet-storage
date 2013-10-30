@@ -22,7 +22,7 @@
   var ATI,
 
     /* local vars */
-    initialized, siteId, subdomain, customVariables, _customVariables, audioRefreshTimer,
+    initialized, siteId, subdomain, customVariables, _customVariables, audioRefreshTimer, _supportsLocalStorage,
 
     /* utilities helpers */
     isObjectEmpty, isArray,
@@ -186,14 +186,19 @@
    * @return {Boolean}
    */
   supportsLocalStorage = function() {
-    var supportsLocalStorage = true;
+    if (_supportsLocalStorage) {
+      return _supportsLocalStorage;
+    }
+
+    _supportsLocalStorage = true;
     try {
       window.localStorage.setItem('sc-test-storage','1');
       window.localStorage.removeItem('sc-test-storage');
     } catch (error) {
-      supportsLocalStorage = false;
+      _supportsLocalStorage = false;
     }
-    return supportsLocalStorage;
+
+    return _supportsLocalStorage;
   };
 
   /**
@@ -422,7 +427,7 @@
    */
   processEvent = function(type, params) {
     var passes = false;
-    if (passesConditions(type, params)) {
+    if (supportsLocalStorage() && supportsJSON() && passesConditions(type, params)) {
       pushEvent(params);
       passes = true;
     }
