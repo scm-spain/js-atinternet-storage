@@ -143,6 +143,9 @@ ATI = {
     if (!window.xtsd) {
       throw new Error('ATI: window.xtsd is missing, check your maintag!');
     }
+    if (!window.xtv) {
+      throw new Error('ATI: window.xtv is missing, check your maintag!');
+    }
 
     var stored = this.getStorage(),
         events = stored ? stored : [],
@@ -174,9 +177,11 @@ ATI = {
         '?s='     + window.xtsite +
         '&s2='    + level +
         '&p='     + event.page +
+        '&vtag='  + window.xtv +
         '&clic='  + event.type +
         '&hl='    + time +
-        '&r='     + screen;
+        '&r='     + screen
+        '&rn='    + date.getTime();
 
     $img
       .attr('src', imgSrc)
