@@ -169,8 +169,17 @@ ATI = {
         time   = date.getHours() + 'x' + date.getMinutes() + 'x' + date.getSeconds(),
         screen = window.screen.width + 'x' + window.screen.height + 'x' + window.screen.pixelDepth + 'x' + window.screen.colorDepth,
         level  = event.level || '';
+
+    var imgSrc = url +
+        '?s='     + window.xtsite +
+        '&s2='    + level +
+        '&p='     + event.page +
+        '&clic='  + event.type +
+        '&hl='    + time +
+        '&r='     + screen;
+
     $img
-      .attr('src', url + '?s=' + window.xtsite + '&s2=' + level + '&p=' + event.page + '&clic=' + event.type + '&hl=' + time + '&r=' + screen)
+      .attr('src', imgSrc)
       .attr('data-ati-uuid', uuid)
       // should probably be a className?
       .css({
