@@ -166,48 +166,90 @@ ATI = {
    */
   request: function(event, uuid) {
     var that   = this,
-        $img   = $(new Image()),
-        date   = new Date(),
+        $img   = $(new Image());
+
+    $img
+        .attr('src', this.generateRequestUrl(event))
+        .attr('data-ati-uuid', uuid)
+      // should probably be a className?
+        .css({
+          width:'1px',
+          height:'1px',
+          position:'absolute',
+          left:'-9999em'
+        })
+      // make sure the request was done before removing it from the storage
+        .bind('load', function() {
+          var stored = that.getStorage();
+          for (var key in stored) {
+            var item = stored[key];
+            for (var id in item) {
+              if ($(this).attr('data-ati-uuid') === id) {
+                delete item[id];
+                that.setStorage(stored);
+                $img.remove();
+                break;
+              }
+            }
+          }
+        });
+    $('body').append($img);
+  },
+
+  /**
+   * Generate the request URL according with the default behaviour of the xtcore version 4.6.4.
+   *
+   * @param event
+   * @returns {string}
+   */
+  generateRequestUrl: function(event) {
+    var date   = new Date(),
         url    = window.xtsd + '.xiti.com/hit.xiti',
         time   = date.getHours() + 'x' + date.getMinutes() + 'x' + date.getSeconds(),
         screen = window.screen.width + 'x' + window.screen.height + 'x' + window.screen.pixelDepth + 'x' + window.screen.colorDepth,
         level  = event.level || '';
 
-    var imgSrc = url +
-        '?s='     + window.xtsite +
-        '&s2='    + level +
-        '&p='     + event.page +
-        '&vtag='  + window.xtv +
-        '&clic='  + event.type +
-        '&hl='    + time +
-        '&r='     + screen +
-        '&rn='    + date.getTime();
+    /**
+     * According to the version 4.6.4 of xtcore, the 'clic' parameter is not send.
+     *
+     * @param event
+     * @returns {string}
+     */
+    var generateFakePageQuery = function(event) {
+      return '?s='  + window.xtsite +
+          '&s2='    + level +
+          '&p='     + event.page +
+          '&vtag='  + window.xtv +
+          '&hl='    + time +
+          '&r='     + screen +
+          '&rn='    + date.getTime();
+    };
 
-    $img
-      .attr('src', imgSrc)
-      .attr('data-ati-uuid', uuid)
-      // should probably be a className?
-      .css({
-        width:'1px',
-        height:'1px',
-        position:'absolute',
-        left:'-9999em'
-      })
-      // make sure the request was done before removing it from the storage
-      .bind('load', function() {
-        var stored = that.getStorage();
-        for (var key in stored) {
-          var item = stored[key];
-          for (var id in item) {
-            if ($(this).attr('data-ati-uuid') === id) {
-              delete item[id];
-              that.setStorage(stored);
-              $img.remove();
-              break;
-            }
-          }
-        }
-      });
-    $('body').append($img);
+    /**
+     * Generates the query with all available params.
+     *
+     * @param event
+     * @returns {string}
+     */
+    var generateDefaultQuery = function(event) {
+      return '?s='  + window.xtsite +
+          '&s2='    + level +
+          '&p='     + event.page +
+          '&vtag='  + window.xtv +
+          '&clic='  + event.type +
+          '&hl='    + time +
+          '&r='     + screen +
+          '&rn='    + date.getTime();
+    };
+
+    switch(event.type) {
+      case 'F' :
+        url += generateFakePageQuery(event);
+        break;
+      default :
+        url += generateDefaultQuery(event);
+    }
+
+    return url;
   }
 };
